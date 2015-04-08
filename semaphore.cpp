@@ -132,7 +132,7 @@ int main()
     cvRenderTracks(tracks, frame, frame, CV_TRACK_RENDER_ID|CV_TRACK_RENDER_BOUNDING_BOX);
 
     cvShowImage("red_object_tracking", frame);
-    cvShowImage("segmentated", segmentated);
+    //cvShowImage("segmentated", segmentated);
     /*std::stringstream filename;
     filename << "redobject_" << std::setw(5) << std::setfill('0') << frameNumber << ".png";
     cvSaveImage(filename.str().c_str(), frame);*/
@@ -147,6 +147,7 @@ int main()
 	
 	Canny( seg_mat, seg_mat, 5, 15, 3 );
 	imshow("Canny", seg_mat);
+	moveWindow("Canny", 500, 0);
 	findContours( seg_mat, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
 	
 	float area=0., max_area=0.;
@@ -192,6 +193,7 @@ int main()
        //circle( drawing, mc[0], 4, color, -1, 8, 0 );
      
 	imshow("drawing", drawing);
+	moveWindow("drawing", 950, 0);
 	
 	cvReleaseImage(&labelImg);
     cvReleaseImage(&segmentated);
