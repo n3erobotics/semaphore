@@ -124,8 +124,9 @@ int main()
     IplImage *labelImg = cvCreateImage(cvGetSize(frame), IPL_DEPTH_LABEL, 1);
 
     CvBlobs blobs;
+    cvFilterByArea(blobs, 10, 1000000);
     unsigned int result = cvLabel(segmentated, labelImg, blobs);
-    cvFilterByArea(blobs, 500, 1000000);
+    
     cvRenderBlobs(labelImg, blobs, frame, frame, CV_BLOB_RENDER_BOUNDING_BOX);
     cvUpdateTracks(blobs, tracks, 200., 5);
     cvRenderTracks(tracks, frame, frame, CV_TRACK_RENDER_ID|CV_TRACK_RENDER_BOUNDING_BOX);
@@ -144,33 +145,59 @@ int main()
 	seg_mat = Mat(segmentated,false);
 	
 	
-	Canny( seg_mat, seg_mat, 33, 100, 3 );
+	Canny( seg_mat, seg_mat, 5, 15, 3 );
+	imshow("Canny", seg_mat);
 	findContours( seg_mat, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
-
+	
+	float area=0., max_area=0.;
+	int position;
+	
+	for( int i = 0; i< contours.size(); i++ ){
+		area = contourArea(contours[i], false);
+		
+		if(area >= max_area){
+			max_area=area;
+			position = i;
+		}
+		
+	}
+	
+	cout << "BIG DADDY BLOB:" << position << endl;
 
 	/// Get the moments
-  vector<Moments> mu(contours.size() );
+  vector<Moments> mu(contours.size());
   for( int i = 0; i < contours.size(); i++ )
      { mu[i] = moments( contours[i], false ); }
+     
+     //mu[0] = moments( contours[position], false );
 
   ///  Get the mass centers:
   vector<Point2f> mc( contours.size() );
   for( int i = 0; i < contours.size(); i++ )
      { mc[i] = Point2f( mu[i].m10/mu[i].m00 , mu[i].m01/mu[i].m00 ); }
+     
+    // mc[0] = Point2f( mu[position].m10/mu[position].m00 , mu[position].m01/mu[position].m00 );
   /// Draw contours
   Mat drawing = Mat::zeros( seg_mat.size(), CV_8UC3 );
   for( int i = 0; i< contours.size(); i++ )
      {
        Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-       drawContours( drawing, contours, i, color, 2, 8, hierarchy, 0, Point() );
+       drawContours( drawing, contours, position, color, 2, 8, hierarchy, 0, Point() );
        circle( drawing, mc[i], 4, color, -1, 8, 0 );
-       cout << "CM_X:" << mc[0].x << "--CM_Y:" << mc[0].y << endl;
+       //cout << "CM_X:" << mc[0].x << "--CM_Y:" << mc[0].y << endl;
      }
+     
+     //Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
+       //drawContours( drawing, contours, position, color, 2, 8, hierarchy, 0, Point() );
+       //circle( drawing, mc[0], 4, color, -1, 8, 0 );
      
 	imshow("drawing", drawing);
 	
 	cvReleaseImage(&labelImg);
     cvReleaseImage(&segmentated);
+    //CvBlobs::const_iterator indicator=0;
+    //float max_area=0.;
+    int i=0;
 	for (CvBlobs::const_iterator it=blobs.begin(); it!=blobs.end(); ++it)
 	{
 		minx = it->second->minx;
@@ -178,19 +205,22 @@ int main()
 		maxx = it->second->maxx;
 		maxy = it->second->maxy;
 		area = it->second->area;
-
+		
 		//Printing the position information
-		cout<<"X: "<<minx<<" Y: "<<miny<<"Xmax: "<<maxx<<" Ymax: "<<maxy<<endl;
+		//cout<<"X: "<<minx<<" Y: "<<miny<<"Xmax: "<<maxx<<" Ymax: "<<maxy<<endl;
 		rectangle(mat_converted, Point( minx, miny ), Point( maxx, maxy), Scalar( 255, 255, 0 ), +1, 4 );
+		i++;
+		if(i=position){
+			break;
+		}
 	}
-	cout << "chega aqui" << endl;
 	
 	if(!blobs.empty()){
-		if ((mc[0].y < (miny+maxy)/2)){
+		if ((mc[position].y < (miny+maxy)/2)){
 			cout << "Seta cima" << endl;
-		}else if((mc[0].x < (minx+maxx)/2)){
+		}else if((mc[position].x < (minx+maxx)/2)){
 			cout << "Seta esquerda" << endl;
-		}else if((mc[0].x > (minx+maxx)/2)){
+		}else if((mc[position].x > (minx+maxx)/2)){
 			cout << "Seta direita" << endl;
 		}
 	}
