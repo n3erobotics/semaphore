@@ -65,7 +65,7 @@ int main()
 	
   cvNamedWindow("red_object_tracking", CV_WINDOW_AUTOSIZE);
 
-  CvCapture *capture = cvCaptureFromCAM(1);
+  CvCapture *capture = cvCaptureFromCAM(7);
   
 	cvSetCaptureProperty( capture, CV_CAP_PROP_FRAME_WIDTH, 640 );
 	cvSetCaptureProperty( capture, CV_CAP_PROP_FRAME_HEIGHT, 480 );
