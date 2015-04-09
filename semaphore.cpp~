@@ -1,5 +1,11 @@
 // Cristóbal Carnero Liñán <grendel.ccl@gmail.com>
 
+// Defines gerais
+
+#define MODE PARKING // RACE or PARKING
+
+// END Defines gerais
+
 #include <iostream>
 #include <iomanip>
 
@@ -17,10 +23,19 @@
 #include <opencv/highgui.h>
 #endif
 
+#define RACE 0
+#define PARKING 1
+
+#define STARTING 0
+#define READY 1
+#define GO 2
+
 #include <cvblob.h>
 using namespace cv;
 using namespace cvb;
 using namespace std;
+
+int semaphore_status = STARTING;
 
 RNG rng(12345);
 
@@ -90,10 +105,11 @@ int main(){
 
  	bool quit = false;
   	while (!quit&&cvGrabFrame(capture)){
-	
+		cout << semaphore_status << " | ";
+		
 	    IplImage *img = cvRetrieveFrame(capture);
 
-		timer.reset();
+		//timer.reset();
 
     	cvConvertScale(img, frame, 1, 0);
 
@@ -121,21 +137,32 @@ int main(){
 
     IplImage *labelImg = cvCreateImage(cvGetSize(frame), IPL_DEPTH_LABEL, 1);
 
-    	CvBlobs blobs;
+    	//CvBlobs blobs;
     
     	//Changing the color space
 		cvCvtColor(frame,hsvframe,CV_BGR2HSV);
 		//Thresholding the frame for yellow | HUE - SATURATION - VALUE/BRIGHTNESS
-		cvInRangeS(hsvframe,cvScalar(40,41,133),cvScalar(80,180,255),segmentated); //TO-DO defines destes valores e das varias cores
+		
+		if (semaphore_status == STARTING){
+			cvInRangeS(hsvframe,cvScalar(0,41,100),cvScalar(10,255,255),segmentated); // red
+		}else if(semaphore_status == READY && MODE == RACE){
+			cout << "RACE MODE";
+			cvInRangeS(hsvframe,cvScalar(40,41,130),cvScalar(100,190,255),segmentated); // green
+		}else if(semaphore_status == READY && MODE == PARKING){
+			cout << "PARKING MODE";
+			cvInRangeS(hsvframe,cvScalar(20,41,130),cvScalar(35,230,255),segmentated); // yellow
+		}
+		
+
 		
 		//Filtering the frame
 		cvSmooth(segmentated,segmentated,CV_MEDIAN,7,7);
 		//Finding the blobs
-		unsigned int result=cvLabel(segmentated,labelImg,blobs);
+		//unsigned int result=cvLabel(segmentated,labelImg,blobs);
 		//Rendering the blobs
-		cvRenderBlobs(labelImg,blobs,frame,frame);
+		//cvRenderBlobs(labelImg,blobs,frame,frame);
 		//Filtering the blobs
-		cvFilterByArea(blobs,400,500);
+		//cvFilterByArea(blobs,400,500);
     
     //unsigned int result = cvLabel(segmentated, labelImg, blobs);
     
@@ -177,7 +204,13 @@ int main(){
 		
 	}
 	
-	cout << "BIG DADDY BLOB:" << position << endl;
+	if (semaphore_status == STARTING && max_area > 1000){
+		semaphore_status = READY;
+	}else if (semaphore_status == READY && max_area > 1000){
+		semaphore_status = GO;
+	}
+	
+	cout << "BIG DADDY BLOB:" << position << " | Area: " << max_area << endl;
 	
 	
 
@@ -215,32 +248,32 @@ int main(){
     //CvBlobs::const_iterator indicator=0;
     //float max_area=0.;
     int i=0;
-	for (CvBlobs::const_iterator it=blobs.begin(); it!=blobs.end(); ++it)
-	{
-		minx = it->second->minx;
-		miny = it->second->miny;
-		maxx = it->second->maxx;
-		maxy = it->second->maxy;
-		area = it->second->area;
+	//for (CvBlobs::const_iterator it=blobs.begin(); it!=blobs.end(); ++it)
+	//{
+		//minx = it->second->minx;
+		//miny = it->second->miny;
+		//maxx = it->second->maxx;
+		//maxy = it->second->maxy;
+		//area = it->second->area;
 		
-		//Printing the position information
-		//cout<<"X: "<<minx<<" Y: "<<miny<<"Xmax: "<<maxx<<" Ymax: "<<maxy<<endl;
-		rectangle(mat_converted, Point( minx, miny ), Point( maxx, maxy), Scalar( 255, 255, 0 ), +1, 4 );
-		i++;
-		if(i=position){
-			break;
-		}
-	}
+		////Printing the position information
+		////cout<<"X: "<<minx<<" Y: "<<miny<<"Xmax: "<<maxx<<" Ymax: "<<maxy<<endl;
+		//rectangle(mat_converted, Point( minx, miny ), Point( maxx, maxy), Scalar( 255, 255, 0 ), +1, 4 );
+		//i++;
+		//if(i=position){
+			//break;
+		//}
+	//}
 	
-	if(!blobs.empty()){
-		if ((mc[position].y < (miny+maxy)/2)){
-			cout << "Seta cima" << endl;
-		}else if((mc[position].x < (minx+maxx)/2)){
-			cout << "Seta esquerda" << endl;
-		}else if((mc[position].x > (minx+maxx)/2)){
-			cout << "Seta direita" << endl;
-		}
-	}
+	//if(!blobs.empty()){
+		//if ((mc[position].y > (miny+maxy)/2)){
+			//cout << "Seta cima" << endl;
+		//}else if((mc[position].x < (minx+maxx)/2)){
+			//cout << "Seta esquerda" << endl;
+		//}else if((mc[position].x > (minx+maxx)/2)){
+			//cout << "Seta direita" << endl;
+		//}
+	//}
 	
 	
 	
@@ -257,30 +290,32 @@ int main(){
 		//imshow("croppedImage",croppedImage);
 	}
     char k = cvWaitKey(10)&0xff;
-    switch (k)
-    {
-      case 27:
-      case 'q':
-      case 'Q':
-        quit = true;
-        break;
-      case 's':
-      case 'S':
-        for (CvBlobs::const_iterator it=blobs.begin(); it!=blobs.end(); ++it)
-        {
-          std::stringstream filename;
-          filename << "redobject_blob_" << std::setw(5) << std::setfill('0') << blobNumber << ".png";
-          cvSaveImageBlob(filename.str().c_str(), img, it->second);
-          blobNumber++;
+    //switch (k)
+    //{
+      //case 27:
+      //case 'q':
+      //case 'Q':
+        //quit = true;
+        //break;
+      //case 's':
+      //case 'S':
+        //for (CvBlobs::const_iterator it=blobs.begin(); it!=blobs.end(); ++it)
+        //{
+          //std::stringstream filename;
+          //filename << "redobject_blob_" << std::setw(5) << std::setfill('0') << blobNumber << ".png";
+          //cvSaveImageBlob(filename.str().c_str(), img, it->second);
+          //blobNumber++;
 
-          std::cout << filename.str() << " saved!" << std::endl;
-        }
-        break;
-    }
+          //std::cout << filename.str() << " saved!" << std::endl;
+        //}
+        //break;
+    
 
-    cvReleaseBlobs(blobs);
+    //cvReleaseBlobs(blobs);
 
-	cout << "Time: " << timer.elapsed() << endl;
+	cout << endl;
+
+	//cout << "Time: " << timer.elapsed() << endl;
 
     //frameNumber++;
   }

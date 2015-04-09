@@ -1,5 +1,11 @@
 // Cristóbal Carnero Liñán <grendel.ccl@gmail.com>
 
+// Defines gerais
+
+#define MODE PARKING // RACE or PARKING
+
+// END Defines gerais
+
 #include <iostream>
 #include <iomanip>
 
@@ -16,6 +22,9 @@
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 #endif
+
+#define RACE 0
+#define PARKING 1
 
 #define STARTING 0
 #define READY 1
@@ -136,12 +145,14 @@ int main(){
 		
 		if (semaphore_status == STARTING){
 			cvInRangeS(hsvframe,cvScalar(0,41,100),cvScalar(10,255,255),segmentated); // red
-		}else if(semaphore_status == READY){
+		}else if(semaphore_status == READY && MODE == RACE){
+			cout << "RACE MODE";
 			cvInRangeS(hsvframe,cvScalar(40,41,130),cvScalar(100,190,255),segmentated); // green
+		}else if(semaphore_status == READY && MODE == PARKING){
+			cout << "PARKING MODE";
+			cvInRangeS(hsvframe,cvScalar(20,41,130),cvScalar(35,230,255),segmentated); // yellow
 		}
 		
-		//
-		//cvInRangeS(hsvframe,cvScalar(20,41,130),cvScalar(35,230,255),segmentated); // yellow
 
 		
 		//Filtering the frame
