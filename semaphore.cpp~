@@ -49,8 +49,7 @@ private:
 };
 
 
-int main()
-{
+int main(){
   CvTracks tracks;
 	Mat cropped, mat_converted, seg_mat;
 	
@@ -66,44 +65,43 @@ int main()
 	sigemptyset(&sigIntHandler.sa_mask);
 	sigIntHandler.sa_flags = 0;
 
-   sigaction(SIGINT, &sigIntHandler, NULL);
+	sigaction(SIGINT, &sigIntHandler, NULL); // captures ctrl + c
 	
-  cvNamedWindow("red_object_tracking", CV_WINDOW_AUTOSIZE);
+	cvNamedWindow("capture", CV_WINDOW_AUTOSIZE);
 
-  CvCapture *capture = cvCaptureFromCAM(1);
+	CvCapture *capture = cvCaptureFromCAM(1);
   
+  	// let's set the camera capture size
 	cvSetCaptureProperty( capture, CV_CAP_PROP_FRAME_WIDTH, 480 );
 	cvSetCaptureProperty( capture, CV_CAP_PROP_FRAME_HEIGHT, 320 );
   
-  cvGrabFrame(capture);
-  IplImage *img = cvRetrieveFrame(capture);
+  	cvGrabFrame(capture);
+  	IplImage *img = cvRetrieveFrame(capture);
 
+	CvSize imgSize = cvGetSize(img);
 
-  CvSize imgSize = cvGetSize(img);
+  	IplImage *frame = cvCreateImage(imgSize, img->depth, img->nChannels);
+  	IplImage *hsvframe=cvCreateImage(imgSize, img->depth, img->nChannels); //Image in HSV color space
 
-  IplImage *frame = cvCreateImage(imgSize, img->depth, img->nChannels);
+  	IplConvKernel* morphKernel = cvCreateStructuringElementEx(5, 5, 1, 1, CV_SHAPE_RECT, NULL);
 
-  IplConvKernel* morphKernel = cvCreateStructuringElementEx(5, 5, 1, 1, CV_SHAPE_RECT, NULL);
+  	//unsigned int frameNumber = 0;
+  	unsigned int blobNumber = 0;
 
-  //unsigned int frameNumber = 0;
-  unsigned int blobNumber = 0;
-
-  bool quit = false;
-  while (!quit&&cvGrabFrame(capture))
-  {
+ 	bool quit = false;
+  	while (!quit&&cvGrabFrame(capture)){
 	
-    IplImage *img = cvRetrieveFrame(capture);
+	    IplImage *img = cvRetrieveFrame(capture);
 
-	timer.reset();
+		timer.reset();
 
-    cvConvertScale(img, frame, 1, 0);
+    	cvConvertScale(img, frame, 1, 0);
 
-    IplImage *segmentated = cvCreateImage(imgSize, 8, 1);
-
+    	IplImage *segmentated = cvCreateImage(imgSize, 8, 1);
 
     // Detecting red pixels:
     // (This is very slow, use direct access better...)
-    for (unsigned int j=0; j<imgSize.height; j++)
+    /*for (unsigned int j=0; j<imgSize.height; j++)
       for (unsigned int i=0; i<imgSize.width; i++)
       {
 	CvScalar c = cvGet2D(frame, j, i);
@@ -114,7 +112,7 @@ int main()
 	unsigned char f = 255*((g>0.05+r)&&(g>0.05+b));
 
 	cvSet2D(segmentated, j, i, CV_RGB(f, f, f));
-      }
+      }*/
 
 
     cvMorphologyEx(segmentated, segmentated, NULL, morphKernel, CV_MOP_OPEN, 1);
@@ -123,15 +121,31 @@ int main()
 
     IplImage *labelImg = cvCreateImage(cvGetSize(frame), IPL_DEPTH_LABEL, 1);
 
-    CvBlobs blobs;
-    cvFilterByArea(blobs, 10, 1000000);
-    unsigned int result = cvLabel(segmentated, labelImg, blobs);
+    	CvBlobs blobs;
     
-    cvRenderBlobs(labelImg, blobs, frame, frame, CV_BLOB_RENDER_BOUNDING_BOX);
-    cvUpdateTracks(blobs, tracks, 200., 5);
-    cvRenderTracks(tracks, frame, frame, CV_TRACK_RENDER_ID|CV_TRACK_RENDER_BOUNDING_BOX);
+    	//Changing the color space
+		cvCvtColor(frame,hsvframe,CV_BGR2HSV);
+		//Thresholding the frame for yellow | HUE - SATURATION - VALUE/BRIGHTNESS
+		cvInRangeS(hsvframe,cvScalar(40,41,133),cvScalar(80,180,255),segmentated); //TO-DO defines destes valores e das varias cores
+		
+		//Filtering the frame
+		cvSmooth(segmentated,segmentated,CV_MEDIAN,7,7);
+		//Finding the blobs
+		unsigned int result=cvLabel(segmentated,labelImg,blobs);
+		//Rendering the blobs
+		cvRenderBlobs(labelImg,blobs,frame,frame);
+		//Filtering the blobs
+		cvFilterByArea(blobs,400,500);
+    
+    //unsigned int result = cvLabel(segmentated, labelImg, blobs);
+    
+    //cvRenderBlobs(labelImg, blobs, frame, frame, CV_BLOB_RENDER_BOUNDING_BOX);
+    
+    //cvUpdateTracks(blobs, tracks, 200., 5);
+    //cvRenderTracks(tracks, frame, frame, CV_TRACK_RENDER_ID|CV_TRACK_RENDER_BOUNDING_BOX);
 
-    cvShowImage("red_object_tracking", frame);
+    cvShowImage("capture", frame);
+    
     //cvShowImage("segmentated", segmentated);
     /*std::stringstream filename;
     filename << "redobject_" << std::setw(5) << std::setfill('0') << frameNumber << ".png";
@@ -164,6 +178,8 @@ int main()
 	}
 	
 	cout << "BIG DADDY BLOB:" << position << endl;
+	
+	
 
 	/// Get the moments
   vector<Moments> mu(contours.size());
@@ -180,10 +196,9 @@ int main()
     // mc[0] = Point2f( mu[position].m10/mu[position].m00 , mu[position].m01/mu[position].m00 );
   /// Draw contours
   Mat drawing = Mat::zeros( seg_mat.size(), CV_8UC3 );
-  for( int i = 0; i< contours.size(); i++ )
-     {
+  for( int i = 0; i< contours.size(); i++ ){
        Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-       drawContours( drawing, contours, position, color, 2, 8, hierarchy, 0, Point() );
+       drawContours( drawing, contours, position,  Scalar( 0, 0, 255 ), 2, 8, hierarchy, 0, Point());
        circle( drawing, mc[i], 4, color, -1, 8, 0 );
        //cout << "CM_X:" << mc[0].x << "--CM_Y:" << mc[0].y << endl;
      }
