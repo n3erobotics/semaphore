@@ -17,10 +17,16 @@
 #include <opencv/highgui.h>
 #endif
 
+#define STARTING 0
+#define READY 1
+#define GO 2
+
 #include <cvblob.h>
 using namespace cv;
 using namespace cvb;
 using namespace std;
+
+int semaphore_status = STARTING;
 
 RNG rng(12345);
 
@@ -90,10 +96,11 @@ int main(){
 
  	bool quit = false;
   	while (!quit&&cvGrabFrame(capture)){
-	
+		cout << semaphore_status << " | ";
+		
 	    IplImage *img = cvRetrieveFrame(capture);
 
-		timer.reset();
+		//timer.reset();
 
     	cvConvertScale(img, frame, 1, 0);
 
@@ -126,7 +133,16 @@ int main(){
     	//Changing the color space
 		cvCvtColor(frame,hsvframe,CV_BGR2HSV);
 		//Thresholding the frame for yellow | HUE - SATURATION - VALUE/BRIGHTNESS
-		cvInRangeS(hsvframe,cvScalar(40,41,133),cvScalar(80,180,255),segmentated); //TO-DO defines destes valores e das varias cores
+		
+		if (semaphore_status == STARTING){
+			cvInRangeS(hsvframe,cvScalar(0,41,100),cvScalar(10,255,255),segmentated); // red
+		}else if(semaphore_status == READY){
+			cvInRangeS(hsvframe,cvScalar(40,41,130),cvScalar(100,190,255),segmentated); // green
+		}
+		
+		//
+		//cvInRangeS(hsvframe,cvScalar(20,41,130),cvScalar(35,230,255),segmentated); // yellow
+
 		
 		//Filtering the frame
 		cvSmooth(segmentated,segmentated,CV_MEDIAN,7,7);
@@ -177,7 +193,13 @@ int main(){
 		
 	}
 	
-	cout << "BIG DADDY BLOB:" << position << endl;
+	if (semaphore_status == STARTING && max_area > 1000){
+		semaphore_status = READY;
+	}else if (semaphore_status == READY && max_area > 1000){
+		semaphore_status = GO;
+	}
+	
+	cout << "BIG DADDY BLOB:" << position << " | Area: " << max_area << endl;
 	
 	
 
@@ -280,7 +302,9 @@ int main(){
 
     //cvReleaseBlobs(blobs);
 
-	cout << "Time: " << timer.elapsed() << endl;
+	cout << endl;
+
+	//cout << "Time: " << timer.elapsed() << endl;
 
     //frameNumber++;
   }
