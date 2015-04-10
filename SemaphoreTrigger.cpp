@@ -43,7 +43,8 @@ private:
 };
 
 
-void waitForIt(){
+//void waitForIt(){
+int main(){
   CvTracks tracks;
 	Mat cropped, mat_converted, seg_mat;
 	
@@ -112,7 +113,7 @@ void waitForIt(){
 			cvInRangeS(hsvframe,cvScalar(45,49,120),cvScalar(81,255,255),segmentated); // green
 		}else if(semaphore_status == READY && MODE == PARKING){
 			cout << "PARKING MODE";
-			cvInRangeS(hsvframe,cvScalar(30,30,140),cvScalar(55,220,255),segmentated); // yellow
+			cvInRangeS(hsvframe,cvScalar(20,30,140),cvScalar(55,220,255),segmentated); // yellow
 		}
 		
 
@@ -153,9 +154,10 @@ void waitForIt(){
 		
 		}
 	
-		if (semaphore_status == STARTING && max_area > 1000){
+		cout << "Max area: " << max_area; 
+		if (semaphore_status == STARTING && max_area > 2000){
 			semaphore_status = READY;
-		}else if (semaphore_status == READY && max_area > 1000){
+		}else if (semaphore_status == READY && max_area > 2000){
 			semaphore_status = GO;
 			cout << endl << endl << "GO GO GO !!!" << endl << endl;
 			break;

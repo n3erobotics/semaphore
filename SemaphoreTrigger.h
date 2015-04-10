@@ -1,4 +1,4 @@
-#define MODE PARKING // RACE or PARKING
+#define MODE RACE // RACE or PARKING
 
 #define RACE 0
 #define PARKING 1
@@ -25,4 +25,5 @@ using namespace cv;
 using namespace cvb;
 using namespace std;
 
-void waitForIt();
+//void waitForIt();
+int main();
