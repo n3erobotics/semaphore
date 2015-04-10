@@ -1,39 +1,6 @@
 // Cristóbal Carnero Liñán <grendel.ccl@gmail.com>
 
-// Defines gerais
-
-#define MODE RACE // RACE or PARKING
-
-// END Defines gerais
-
-#include <iostream>
-#include <iomanip>
-
-#include <signal.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-
-
-#if (defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(__WINDOWS__) || (defined(__APPLE__) & defined(__MACH__)))
-#include <cv.h>
-#include <highgui.h>
-#else
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
-#endif
-
-#define RACE 0
-#define PARKING 1
-
-#define STARTING 0
-#define READY 1
-#define GO 2
-
-#include <cvblob.h>
-using namespace cv;
-using namespace cvb;
-using namespace std;
+#include <SemaphoreTrigger.h>
 
 int semaphore_status = STARTING;
 
@@ -64,7 +31,7 @@ private:
 };
 
 
-int main(){
+void waitForIt(){
   CvTracks tracks;
 	Mat cropped, mat_converted, seg_mat;
 	
@@ -178,7 +145,7 @@ int main(){
 			semaphore_status = READY;
 		}else if (semaphore_status == READY && max_area > 1000){
 			semaphore_status = GO;
-			cout << "Go GO GO !!!" << endl;
+			cout << endl << endl << "GO GO GO !!!" << endl << endl;
 			break;
 		}
 	

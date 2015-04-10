@@ -1,4 +1,4 @@
-all:	red_object_tracking
+all:	semaphore
 
-red_object_tracking: red_object_tracking.cpp
-	g++  red_object_tracking.cpp -o red_object_tracking `pkg-config opencv cvblob --cflags --libs`
+semaphore: SemaphoreTrigger.cpp
+	g++ SemaphoreTrigger.cpp -o SemaphoreTrigger `pkg-config opencv cvblob --cflags --libs`
