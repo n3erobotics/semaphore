@@ -17,14 +17,14 @@
 
 #include <cv.h>
 #include <highgui.h>
-#else
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
-#endif
 #include <cvblob.h>
 
 using namespace cv;
 using namespace cvb;
 using namespace std;
 
-void waitForIt();
+int main();
+
+//void waitForIt();

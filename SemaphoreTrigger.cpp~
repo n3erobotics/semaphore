@@ -1,4 +1,18 @@
-#include <SemaphoreTrigger.h>
+#include <iostream>
+#include <iomanip>
+
+#include <signal.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+
+#include <cv.h>
+#include <highgui.h>
+#include <opencv/cv.h>
+#include <opencv/highgui.h>
+#include <cvblob.h>
+
+#include "SemaphoreTrigger.h"
 
 int semaphore_status = STARTING;
 
@@ -50,7 +64,7 @@ int main(){
 	
 	cvNamedWindow("capture", CV_WINDOW_AUTOSIZE);
 
-	CvCapture *capture = cvCaptureFromCAM(0);
+	CvCapture *capture = cvCaptureFromCAM(1);
   
   	// let's set the camera capture size
 	cvSetCaptureProperty( capture, CV_CAP_PROP_FRAME_WIDTH, 480 );
@@ -93,7 +107,7 @@ int main(){
 		
 		//Thresholding the frame for different colors | HUE - SATURATION - VALUE/BRIGHTNESS
 		if (semaphore_status == STARTING){
-			cvInRangeS(hsvframe,cvScalar(135,100,210),cvScalar(180,255,255),segmentated); // red
+			cvInRangeS(hsvframe,cvScalar(0,80,120),cvScalar(180,255,255),segmentated); // red
 		}else if(semaphore_status == READY && MODE == RACE){
 			cout << "RACE MODE";
 			cvInRangeS(hsvframe,cvScalar(45,49,180),cvScalar(81,255,255),segmentated); // green
