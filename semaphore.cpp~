@@ -2,7 +2,7 @@
 
 // Defines gerais
 
-#define MODE PARKING // RACE or PARKING
+#define MODE RACE // RACE or PARKING
 
 // END Defines gerais
 
@@ -84,7 +84,7 @@ int main(){
 	
 	cvNamedWindow("capture", CV_WINDOW_AUTOSIZE);
 
-	CvCapture *capture = cvCaptureFromCAM(1);
+	CvCapture *capture = cvCaptureFromCAM(0);
   
   	// let's set the camera capture size
 	cvSetCaptureProperty( capture, CV_CAP_PROP_FRAME_WIDTH, 480 );
@@ -93,7 +93,7 @@ int main(){
   	cvGrabFrame(capture);
   	IplImage *img = cvRetrieveFrame(capture);
 
-	CvSize imgSize = cvGetSize(img);
+	CvSize imgSize = cvGetSize(img); //cvSize(480,320);
 
   	IplImage *frame = cvCreateImage(imgSize, img->depth, img->nChannels);
   	IplImage *hsvframe=cvCreateImage(imgSize, img->depth, img->nChannels); //Image in HSV color space
@@ -144,13 +144,13 @@ int main(){
 		//Thresholding the frame for yellow | HUE - SATURATION - VALUE/BRIGHTNESS
 		
 		if (semaphore_status == STARTING){
-			cvInRangeS(hsvframe,cvScalar(0,41,100),cvScalar(10,255,255),segmentated); // red
+			cvInRangeS(hsvframe,cvScalar(135,100,210),cvScalar(180,255,255),segmentated); // red
 		}else if(semaphore_status == READY && MODE == RACE){
 			cout << "RACE MODE";
-			cvInRangeS(hsvframe,cvScalar(40,41,130),cvScalar(100,190,255),segmentated); // green
+			cvInRangeS(hsvframe,cvScalar(45,49,180),cvScalar(81,255,255),segmentated); // green
 		}else if(semaphore_status == READY && MODE == PARKING){
 			cout << "PARKING MODE";
-			cvInRangeS(hsvframe,cvScalar(20,41,130),cvScalar(35,230,255),segmentated); // yellow
+			cvInRangeS(hsvframe,cvScalar(30,30,140),cvScalar(55,220,255),segmentated); // yellow
 		}
 		
 
