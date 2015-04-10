@@ -43,8 +43,7 @@ private:
 };
 
 
-//void waitForIt(){
-int main(){
+void waitForIt(){
   CvTracks tracks;
 	Mat cropped, mat_converted, seg_mat;
 	

@@ -25,6 +25,4 @@ using namespace cv;
 using namespace cvb;
 using namespace std;
 
-int main();
-
-//void waitForIt();
+void waitForIt();
