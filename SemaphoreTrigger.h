@@ -1,4 +1,6 @@
 #define MODE RACE // RACE or PARKING
+#define TIMEOUT_TIME 10 // Timeout se nao encontrar nada
+#define CAMERA_NO 2 // Camera number
 
 #define RACE 0
 #define PARKING 1

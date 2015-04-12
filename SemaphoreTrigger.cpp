@@ -42,15 +42,20 @@ private:
     timespec beg_, end_;
 };
 
+int tempoTimeout = 0;
 
 //void waitForIt(){
 int main(){
   CvTracks tracks;
 	Mat cropped, mat_converted, seg_mat;
 	
+	if (MODE == PARKING){
+		cout << endl << ">>>>>> PARKING MODE" << endl << endl;
+	}else{
+		cout << endl << ">>>>>> RACE MODE" << endl <<  endl;
+	}
 	
-	
-	Timer timer;
+	Timer timer, timer2;
 
 	double minx, miny, maxx, maxy, area;
 	
@@ -64,7 +69,7 @@ int main(){
 	
 	cvNamedWindow("capture", CV_WINDOW_AUTOSIZE);
 
-	CvCapture *capture = cvCaptureFromCAM(1);
+	CvCapture *capture = cvCaptureFromCAM(CAMERA_NO);
   
   	// let's set the camera capture size
 	cvSetCaptureProperty( capture, CV_CAP_PROP_FRAME_WIDTH, 480 );
@@ -82,10 +87,12 @@ int main(){
 
   	//unsigned int frameNumber = 0;
   	unsigned int blobNumber = 0;
+	
+	timer2.reset();
 
  	bool quit = false;
   	while (!quit&&cvGrabFrame(capture)){
-		cout << semaphore_status << " | ";
+		//cout << semaphore_status << " | ";
 		
 		timer.reset();
 		
@@ -109,11 +116,11 @@ int main(){
 		if (semaphore_status == STARTING){
 			cvInRangeS(hsvframe,cvScalar(0,80,120),cvScalar(180,255,255),segmentated); // red
 		}else if(semaphore_status == READY && MODE == RACE){
-			cout << "RACE MODE";
+			//cout << "RACE MODE";
 			cvInRangeS(hsvframe,cvScalar(45,49,120),cvScalar(81,255,255),segmentated); // green
 		}else if(semaphore_status == READY && MODE == PARKING){
-			cout << "PARKING MODE";
-			cvInRangeS(hsvframe,cvScalar(20,30,140),cvScalar(55,220,255),segmentated); // yellow
+			//cout << "PARKING MODE";
+			cvInRangeS(hsvframe,cvScalar(20,50,120),cvScalar(45,220,255),segmentated); // yellow
 		}
 		
 
@@ -154,10 +161,10 @@ int main(){
 		
 		}
 	
-		cout << "Max area: " << max_area; 
-		if (semaphore_status == STARTING && max_area > 2000){
+		//cout << "Max area: " << max_area; 
+		if (semaphore_status == STARTING && max_area > 2500){
 			semaphore_status = READY;
-		}else if (semaphore_status == READY && max_area > 2000){
+		}else if (semaphore_status == READY && max_area > 2500){
 			semaphore_status = GO;
 			cout << endl << endl << "GO GO GO !!!" << endl << endl;
 			break;
@@ -220,9 +227,19 @@ int main(){
 	*/
     char k = cvWaitKey(10)&0xff;
 
-	cout << endl;
+	//cout << "Time: " << timer.elapsed() << endl;
 
-	cout << "Time: " << timer.elapsed() << endl;
+	if (timer2.elapsed() > tempoTimeout){
+		cout << endl << "Timeout: "<< timer2.elapsed() << endl;
+		tempoTimeout++;
+	}
+
+	if (timer2.elapsed() > TIMEOUT_TIME){
+		cout << "Não encontrei porra nenhuma! -> Siga" << endl;
+		semaphore_status = GO;
+		cout << endl << endl << "GO GO GO !!!" << endl << endl;
+		break;
+	}
 
     //frameNumber++;
   }
